@@ -1,27 +1,29 @@
-import React, { useState } from "react";
-import * as d3 from "d3";
-import "./App.css";
+import React, { useState, useEffect } from 'react';
+import * as d3 from 'd3';
+import './App.css';
 
 const draw = (x, y, container) => {
-  const circle = container
-    .append("circle")
-    .attr("cx", x)
-    .attr("cy", y)
-    .attr("r", 56);
-  const text = container
-    .append("text")
-    .attr("x", x)
-    .attr("y", y)
-    .text("lorem ipsum");
+  const group = container.append('g').attr('class', 'node');
+
+  const circle = group
+    .append('circle')
+    .attr('cx', x)
+    .attr('cy', y)
+    .attr('r', 56);
+  const text = group
+    .append('text')
+    .attr('x', x)
+    .attr('y', y)
+    .text('lorem ipsum');
 
   let bb = text.node().getBBox();
   let centerX = bb.width / 2;
   let centerY = bb.height / 4;
 
-  text.attr("x", x - centerX);
-  text.attr("y", y + centerY);
+  text.attr('x', x - centerX);
+  text.attr('y', y + centerY);
 
-  return { circle, text };
+  return { circle, text, group };
 };
 
 const App = () => {
@@ -31,33 +33,39 @@ const App = () => {
   const clientHeight = document.documentElement.clientHeight - 30;
   let svg;
 
+  const force = d3
+    .forceSimulation()
+    .force('charge', d3.forceManyBody().strength(5))
+    .force('center', d3.forceCenter(clientWidth / 3, clientHeight / 3))
+    .force('collision', d3.forceCollide().radius(56));
+
+  useEffect(() => {
+    const groupWithData = svg.selectAll('g').data(circles);
+    //groupWithData.exit().remove();
+
+    force.nodes(circles).on('tick', () => {
+      groupWithData.attr('transform', d => `translate(${d.x},${d.y})`);
+    });
+
+    //force.alphaTarget(0.3).restart();
+  }, [circles]);
+
   const handleAdd = () => {
     const maxCirclesNumX = Math.floor(clientWidth / 124);
     const maxCirclesNumY = Math.floor(clientHeight / 124);
-    let x, y;
-    if (circles.length === maxCirclesNumX * maxCirclesNumY) {
-      console.log("max number reached");
-      return;
-    }
-    if (circles.length === 0) {
-      x = 68;
-      y = 68;
-    } else if (circles.length % maxCirclesNumX === 0) {
-      x = 68;
-      y = circles[circles.length - 1].y + 124;
-    } else {
-      x = circles[circles.length - 1].x + 124;
-      y = circles[circles.length - 1].y;
-    }
+    const x = 128,
+      y = 128;
 
     const drawn = draw(x, y, svg);
     setCircles(
       circles.concat({
+        id: `${x * y + Math.floor(Math.random() * 50)}`,
+        group: drawn.group,
         circle: drawn.circle,
         text: drawn.text,
-        x,
-        y
-      })
+        x: x,
+        y: y,
+      }),
     );
   };
 
@@ -65,25 +73,26 @@ const App = () => {
     if (circles.length === 0) return;
     const indexToDelete = circles.length - 1;
     const newCircles = circles.slice(0, indexToDelete);
-    circles[indexToDelete].circle.remove();
-    circles[indexToDelete].text.remove();
+    circles[indexToDelete].group.remove();
+    //  circles[indexToDelete].text.remove();
     setCircles(newCircles);
   };
 
   return (
     <>
-      <div id='controls'>
-        <button className='button' onClick={handleAdd}>
+      <div id="controls">
+        <button className="button" onClick={handleAdd}>
           Add
         </button>
-        <button className='button' onClick={handleRemove}>
+        <button className="button" onClick={handleRemove}>
           Remove last
         </button>
       </div>
       <svg
         width={clientWidth}
         height={clientHeight}
-        ref={element => (svg = d3.select(element))}></svg>
+        ref={element => (svg = d3.select(element))}
+      ></svg>
     </>
   );
 };

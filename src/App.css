@@ -6,6 +6,7 @@ svg {
 
 circle {
   fill: black;
+  stroke: white;
 }
 
 text {
