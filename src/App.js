@@ -2,26 +2,21 @@ import React, { useState, useEffect } from 'react';
 import * as d3 from 'd3';
 import './App.css';
 
+//function for drawing circles using d3, centering text within them and grouping as one
 const draw = (x, y, container) => {
   const group = container.append('g').attr('class', 'node');
 
   const circle = group
     .append('circle')
-    .attr('cx', x)
-    .attr('cy', y)
-    .attr('r', 56);
+      .attr('cx', x)
+      .attr('cy', y)
+      .attr('r', 56);
   const text = group
     .append('text')
-    .attr('x', x)
-    .attr('y', y)
-    .text('lorem ipsum');
-
-  let bb = text.node().getBBox();
-  let centerX = bb.width / 2;
-  let centerY = bb.height / 4;
-
-  text.attr('x', x - centerX);
-  text.attr('y', y + centerY);
+      .attr('x', x)
+      .attr('y', y)
+      .attr('text-anchor', 'middle')
+      .text('lorem ipsum');
 
   return { circle, text, group };
 };
@@ -33,33 +28,52 @@ const App = () => {
   const clientHeight = document.documentElement.clientHeight - 30;
   let svg;
 
+  //creates new forceSimulation with:
+  //force applied amongst all nodes - positive strength means that nodes attract each other
+  //force to push all nodes towards X: clientWidth/2.5, Y: clientHeight/2.5
+  //collision detection in radius of 56 around each node - the same as radius of a circle
   const force = d3
     .forceSimulation()
-    .force('charge', d3.forceManyBody().strength(5))
-    .force('center', d3.forceCenter(clientWidth / 3, clientHeight / 3))
-    .force('collision', d3.forceCollide().radius(56));
+    .force('attraction', d3.forceManyBody().strength(60))
+    .force('forceX', d3.forceX()
+        .strength(0.1)
+        .x(clientWidth / 2.5))
+    .force('forceY', d3.forceY()
+        .strength(0.1)
+        .y(clientHeight / 2.5))
+    .force('collision', d3.forceCollide()
+        .radius(56)
+        .iterations(2));
 
+  //useEffect - with each change of 'circles' state:
+  //select groups, each with circle and text attached to it
+  //assign data to the selection
+  //with each tick of simulation make smooth transition
+  //to calculated position
   useEffect(() => {
     const groupWithData = svg.selectAll('g').data(circles);
-    //groupWithData.exit().remove();
 
     force.nodes(circles).on('tick', () => {
-      groupWithData.attr('transform', d => `translate(${d.x},${d.y})`);
+      groupWithData
+        .transition()
+        .duration(80)
+          .attr('transform', d => `translate(${d.x}, ${d.y})`);
     });
-
-    //force.alphaTarget(0.3).restart();
+    //when enabled, makes nodes move a little more after adding one
+    //force.alphaTarget(0.3);
   }, [circles]);
 
   const handleAdd = () => {
-    const maxCirclesNumX = Math.floor(clientWidth / 124);
-    const maxCirclesNumY = Math.floor(clientHeight / 124);
-    const x = 128,
-      y = 128;
+    //unnecessary with force simulation
+    //const maxCirclesNumX = Math.floor(clientWidth / 124);
+    //const maxCirclesNumY = Math.floor(clientHeight / 124);
+    const x = 32,
+      y = 32;
 
     const drawn = draw(x, y, svg);
     setCircles(
       circles.concat({
-        id: `${x * y + Math.floor(Math.random() * 50)}`,
+        id: `${x * y + Math.floor(Math.random() * 10000)}`,
         group: drawn.group,
         circle: drawn.circle,
         text: drawn.text,
@@ -74,10 +88,10 @@ const App = () => {
     const indexToDelete = circles.length - 1;
     const newCircles = circles.slice(0, indexToDelete);
     circles[indexToDelete].group.remove();
-    //  circles[indexToDelete].text.remove();
     setCircles(newCircles);
   };
 
+  //using ref to access <svg> tag with d3
   return (
     <>
       <div id="controls">
