@@ -2,31 +2,31 @@ import React, { useState, useEffect } from 'react';
 import * as d3 from 'd3';
 import './App.css';
 
-//function for drawing circles using d3, centering text within them and grouping as one
-const draw = (x, y, container) => {
-  const group = container.append('g').attr('class', 'node');
-
-  const circle = group
-    .append('circle')
-      .attr('cx', x)
-      .attr('cy', y)
-      .attr('r', 56);
-  const text = group
-    .append('text')
-      .attr('x', x)
-      .attr('y', y)
-      .attr('text-anchor', 'middle')
-      .text('lorem ipsum');
-
-  return { circle, text, group };
-};
-
 const App = () => {
   const [circles, setCircles] = useState([]);
 
   const clientWidth = document.documentElement.clientWidth - 200;
   const clientHeight = document.documentElement.clientHeight - 30;
   let svg;
+
+  //function for drawing circles using d3, centering text within them and grouping as one
+  const draw = (x, y, container) => {
+    const group = container.append('g').attr('class', 'node');
+
+    const circle = group
+      .append('circle')
+        .attr('cx', x)
+        .attr('cy', y)
+        .attr('r', 56);
+    const text = group
+      .append('text')
+        .attr('x', x)
+        .attr('y', y)
+        .attr('text-anchor', 'middle')
+        .text('lorem ipsum');
+
+    return { circle, text, group };
+  };
 
   //creates new forceSimulation with:
   //force applied amongst all nodes - positive strength means that nodes attract each other
