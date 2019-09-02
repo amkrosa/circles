@@ -5,6 +5,8 @@ import './App.css';
 const App = () => {
   const [circles, setCircles] = useState([]);
 
+  //sets width and height based on browser window -- changing size with app open
+  //will also change those values and with those given constraints of maximum circles possible
   const clientWidth = document.documentElement.clientWidth - 200;
   const clientHeight = document.documentElement.clientHeight - 30;
   let svg;
